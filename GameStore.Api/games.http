@@ -8,10 +8,10 @@ POST http://localhost:5226/games
 Content-Type: application/json
 
 {
-    "name": "Minecraft",
-    "genreId": 5,
-    "price": 19.99,
-    "releaseDate": "2011-11-18"
+    "name": "Read Dead Redemption",
+    "genreId": 2,
+    "price": 69.99,
+    "releaseDate": "2020-07-16"
 }
 
 ###
