@@ -1,4 +1,4 @@
-🎮 GameStore API
+# 🎮 GameStore API
 
 A RESTful API for managing a video game catalog built with ASP.NET Core Minimal APIs and Entity Framework Core.
 
@@ -9,11 +9,11 @@ A RESTful API for managing a video game catalog built with ASP.NET Core Minimal 
 <img width="1919" height="895" alt="Screenshot 2026-01-06 204803" src="https://github.com/user-attachments/assets/20a4aeaf-2865-496e-a831-49047fae29b1" />
 
 
-About
+# About
 
 GameStore API is a clean backend service for managing video games and genres. It demonstrates modern .NET development with Minimal APIs, Entity Framework Core, and the DTO pattern.
 
-Features
+# Features
 
 CRUD operations for games
 Genre management
@@ -22,23 +22,27 @@ DTO pattern for data transfer
 EF Core query optimization
 Input validation
 
-Tech Stack
+# Tech Stack
 
 ASP.NET Core 8.0 (Minimal APIs)
-Entity Framework Core 8.0
-SQLite
-C# 12
 
-Prerequisites
+Entity Framework Core 8.0
+
+SQLite
+
+C# 8
+
+# Prerequisites
 
 .NET 8.0.4 SDK
 SQLite
 
-How to run:
+# How to run:
 
 cd GameStore.Api
 
 # Update connection string in appsettings.json
+
 # Run the application
 dotnet run
 
