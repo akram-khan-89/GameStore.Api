@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Store Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .navbar-custom {
+            background-color: #2c3e50;
+            padding: 1rem 2rem;
+        }
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        .btn-new-game {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .btn-new-game:hover {
+            background-color: #0056b3;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 2rem auto;
+            max-width: 1400px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+        .table thead th {
+            border: none;
+            padding: 1rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-edit {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+        .btn-edit:hover {
+            background-color: #0056b3;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container-fluid">
+            <span class="navbar-brand">Game Store</span>
+            <button class="btn-new-game" onclick="showAddModal()">New Game</button>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Genre</th>
+                        <th>Price</th>
+                        <th>Release Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="gamesTableBody">
+                    <!-- Games will be loaded here -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-gamepad fa-3x mb-3"></i>
+                <p>No games found. Click "New Game" to add your first game!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Game Modal -->
+    <div class="modal fade" id="gameModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add New Game</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="gameForm">
+                        <input type="hidden" id="gameId">
+                        <div class="mb-3">
+                            <label for="gameName" class="form-label">Game Name</label>
+                            <input type="text" class="form-control" id="gameName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gameGenre" class="form-label">Genre</label>
+                            <select class="form-select" id="gameGenre" required>
+                                <option value="">Select Genre</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gamePrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="gamePrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gameReleaseDate" class="form-label">Release Date</label>
+                            <input type="date" class="form-control" id="gameReleaseDate" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveGame()">Save Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // CHANGE THIS TO YOUR API BASE URL
+        const API_BASE = 'http://localhost:5226';
+        
+        let currentGameId = null;
+        let genres = [];
+        let gameModal;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            gameModal = new bootstrap.Modal(document.getElementById('gameModal'));
+            loadGenres();
+            loadGames();
+        });
+
+        // Load all genres
+        async function loadGenres() {
+            try {
+                const response = await fetch(`${API_BASE}/genres`);
+                genres = await response.json();
+                const select = document.getElementById('gameGenre');
+                select.innerHTML = '<option value="">Select Genre</option>';
+                genres.forEach(genre => {
+                    select.innerHTML += `<option value="${genre.id}">${genre.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading genres:', error);
+                alert('Failed to load genres. Make sure your API is running.');
+            }
+        }
+
+        // Load all games
+        async function loadGames() {
+            try {
+                const response = await fetch(`${API_BASE}/games`);
+                const games = await response.json();
+                displayGames(games);
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Failed to load games. Make sure your API is running at ' + API_BASE + '</td></tr>';
+            }
+        }
+
+        // Display games in table
+        function displayGames(games) {
+            const tbody = document.getElementById('gamesTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (games.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = games.map(game => `
+                <tr>
+                    <td>${game.id}</td>
+                    <td>${game.name}</td>
+                    <td>${game.genre}</td>
+                    <td>$${game.price.toFixed(2)}</td>
+                    <td>${new Date(game.releaseDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editGame(${game.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" onclick="deleteGame(${game.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Show add modal
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Game';
+            document.getElementById('gameForm').reset();
+            document.getElementById('gameId').value = '';
+            currentGameId = null;
+            gameModal.show();
+        }
+
+        // Edit game
+        async function editGame(id) {
+            try {
+                const response = await fetch(`${API_BASE}/games/${id}`);
+                const game = await response.json();
+                
+                document.getElementById('modalTitle').textContent = 'Edit Game';
+                document.getElementById('gameId').value = game.id;
+                document.getElementById('gameName').value = game.name;
+                document.getElementById('gameGenre').value = game.genreId;
+                document.getElementById('gamePrice').value = game.price;
+                document.getElementById('gameReleaseDate').value = game.releaseDate.split('T')[0];
+                
+                currentGameId = id;
+                gameModal.show();
+            } catch (error) {
+                console.error('Error loading game for edit:', error);
+                alert('Failed to load game data');
+            }
+        }
+
+        // Save game (create or update)
+        async function saveGame() {
+            const id = document.getElementById('gameId').value;
+            const gameData = {
+                name: document.getElementById('gameName').value,
+                genreId: parseInt(document.getElementById('gameGenre').value),
+                price: parseFloat(document.getElementById('gamePrice').value),
+                releaseDate: document.getElementById('gameReleaseDate').value
+            };
+
+            try {
+                let response;
+                if (id) {
+                    // Update existing game
+                    response = await fetch(`${API_BASE}/games/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(gameData)
+                    });
+                } else {
+                    // Create new game
+                    response = await fetch(`${API_BASE}/games`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(gameData)
+                    });
+                }
+
+                if (response.ok) {
+                    gameModal.hide();
+                    loadGames();
+                    alert(id ? 'Game updated successfully!' : 'Game added successfully!');
+                } else {
+                    alert('Failed to save game');
+                }
+            } catch (error) {
+                console.error('Error saving game:', error);
+                alert('Failed to save game');
+            }
+        }
+
+        // Delete game
+        async function deleteGame(id) {
+            if (!confirm('Are you sure you want to delete this game?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/games/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadGames();
+                    alert('Game deleted successfully!');
+                } else {
+                    alert('Failed to delete game');
+                }
+            } catch (error) {
+                console.error('Error deleting game:', error);
+                alert('Failed to delete game');
+            }
+        }
+    </script>
+</body>
+</html>
