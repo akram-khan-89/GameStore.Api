@@ -8,10 +8,24 @@ var connString = builder.Configuration.GetConnectionString("GameStore");
 // Register services
 builder.Services.AddSqlite<GameStoreContext>(connString);
 
+// Adding CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
-app.MapGameEndpoints();
+app.UseCors("AllowAll");
 
-app.MigrateDb();
+app.MapGameEndpoints();
+app.MapGenreEndpoints();
+
+await app.MigrateDbAsync();
 
 app.Run();
