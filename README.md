@@ -16,10 +16,15 @@ GameStore API is a clean backend service for managing video games and genres. It
 # Features
 
 CRUD operations for games
+
 Genre management
+
 Game-Genre relationships
+
 DTO pattern for data transfer
+
 EF Core query optimization
+
 Input validation
 
 # Tech Stack
@@ -35,6 +40,7 @@ C# 8
 # Prerequisites
 
 .NET 8.0.4 SDK
+
 SQLite
 
 # How to run:
